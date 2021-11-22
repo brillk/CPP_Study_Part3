@@ -129,7 +129,9 @@ void Player::Bfs()
 
 	const int32 size = _board->GetSize();
 	vector<vector<bool>> discovered(size, vector<bool>(size, false));
-
+		
+		
+	/////////////////////////////////
 	//vector<vector<Pos>> parent;
 	//parent[A] = B -> A는 B로 인해 발견함
 	map<Pos, Pos> parent;
@@ -139,12 +141,10 @@ void Player::Bfs()
 	discovered[pos.y][pos.x] = true;
 	parent[pos] = pos;
 
-
 	while(q.empty() == false)
 	{
 		pos = q.front();
 		q.pop();
-
 
 		//방문
 		if (pos == dest)
