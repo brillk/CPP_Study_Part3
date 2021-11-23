@@ -250,7 +250,7 @@ void Player::AStar()
 
 
 
-	//best[y][x] -> 지금까지 y, xㅇ[ 대한 가장 좋은 비용
+	//best[y][x] -> 지금까지 y, x에 대한 가장 좋은 비용
 	vector<vector<int32>> best(size, vector<int32>(size, INT32_MAX));
 
 	//부모 추적 용도
