@@ -3,15 +3,14 @@
 #include <windows.h>
 using namespace std;
 
-
-enum class ConsoleColor {
+enum class ConsoleColor
+{
 	BLACK = 0,
 	RED = FOREGROUND_RED,
 	GREEN = FOREGROUND_GREEN,
 	BLUE = FOREGROUND_BLUE,
-	YELLOW = RED | BLUE,
+	YELLOW = RED | GREEN,
 	WHITE = RED | GREEN | BLUE,
-
 };
 
 void SetCursorColor(ConsoleColor color)
@@ -29,7 +28,7 @@ void SetCursorPosition(int x, int y)
 
 BinarySearchTree::BinarySearchTree()
 {
-	_nil = new Node(); //black 하나만 만들어서 전역으로 쓸거기 떄문에 함수로 만들었다
+	_nil = new Node(); // Black
 	_root = _nil;
 }
 
@@ -49,7 +48,6 @@ void BinarySearchTree::Print(Node* node, int x, int y)
 		SetCursorColor(ConsoleColor::BLUE);
 	else
 		SetCursorColor(ConsoleColor::RED);
-
 
 	cout << node->key;
 	Print(node->left, x - (5 / (y + 1)), y + 1);
@@ -127,7 +125,7 @@ void BinarySearchTree::Insert(int key)
 	else
 		parent->right = newNode;
 
-	//검사
+	// 검사
 	newNode->left = _nil;
 	newNode->right = _nil;
 	newNode->color = Color::Red;
@@ -137,100 +135,86 @@ void BinarySearchTree::Insert(int key)
 
 void BinarySearchTree::InsertFixup(Node* node)
 {
-	//1. p = red, uncle = red
-	// 	   -> p = black, uncle = black, pp = red 로 바꿈
-	//2. p = red, uncle = black (triangle)
-	// 	   ->회전을 통해 case 3으로 바꿈
-	//3. p = red, uncle = black (list)
-	//		->색상 변경 + 회전
-	// 
-	//
-		//[p]
-		while (node->parent->color == Color::Red)
+	// 1) p = red, uncle = red
+	// -> p = black, uncle = black, pp = red로 바꿈
+	// 2) p = red, uncle = black (triangle)
+	// -> 회전을 통해 case 3으로 바꿈
+	// 3) p = red, uncle = black (list)	
+	// -> 색상 변경 + 회전
+
+	while (node->parent->color == Color::Red)
+	{
+		if (node->parent == node->parent->parent->left)
 		{
-			//노드의 부모와 그 부모의 또 하나의 부모가 왼쪽에 있는지 오른쪽에 있는지 확인
-			if (node->parent == node->parent->parent->left)
+			Node* uncle = node->parent->parent->right;
+			if (uncle->color == Color::Red)
 			{
-				Node* uncle = node->parent->parent->right;	
-
-				//	[pp][R]
-				//[p][R]	[u][R] 오른쪽에 있는 노드(삼촌)가 빨간색일때
-				if (uncle->color == Color::Red)
-				{
-					node->parent->color = Color::Black; //p
-					uncle->color = Color::Black; //u
-					node->parent->parent->color = Color::Red; //pp
-					//전부다 색깔을 바꿈
-
-					node = node->parent->parent;
-				}
-				else
-				{
-					//위의 2,3번 상황 
-					//		pp[B]
-					//	p[R]		u[B]
-					//		n[R] <- 이게 오른쪽에 있으면 ㄱ자 모양으로 트라이앵글, 왼쪽이면 리스트
-					if (node == node->parent->right)//triangle 타입
-					{
-						node = node->parent;
-						LeftRotate(node);
-					}
-
-					//List 타입
-					// 
-					// 전
-					//		pp[R]
-					//	 p[B]	u[B]
-					// n[R] 
-
-					//후
-					//		p[B]
-					//	n[R]	pp[R]
-					// 				u[B]
-					node->parent->color = Color::Black;
-					node->parent->parent->color = Color::Red;
-					RightRotate(node->parent->parent);
-				}
-
+				node->parent->color = Color::Black; // p
+				uncle->color = Color::Black; // u
+				node->parent->parent->color = Color::Red; // pp
+				node = node->parent->parent;
 			}
 			else
 			{
-				Node* uncle = node->parent->parent->left;
+				//       [pp(B)]
+				//   [p(R)]     [u(B)]
+				//      [n(R)]
 
-				//	[pp][R]
-				//[p][R]	[u][R] 오른쪽에 있는 노드(삼촌)가 빨간색일때
-				if (uncle->color == Color::Red)
+				//        [pp(B)]
+				//      [p(R)]  [u(B)]
+				//   [n(R)]   
+
+				if (node == node->parent->right) // Triangle 타입
 				{
-					node->parent->color = Color::Black; //p
-					uncle->color = Color::Black; //u
-					node->parent->parent->color = Color::Red; //pp
-					//전부다 색깔을 바꿈
-
-					node = node->parent->parent;
+					node = node->parent;
+					LeftRotate(node);
 				}
-				else
-				{
-					//위의 2,3번 상황 
-					//		pp[B]
-					//	p[R]		u[B]
-					//		n[R] <- 이게 오른쪽에 있으면 ㄱ자 모양으로 트라이앵글, 왼쪽이면 리스트
-					if (node == node->parent->left)//triangle 타입
-					{
-						node = node->parent;
-						RightRotate(node);
-					}
 
-					//List 타입
-					//			p[B]
-					//		pp[R]	n[R]
-					// 	u[B]			
-					node->parent->color = Color::Black;
-					node->parent->parent->color = Color::Red;
-					LeftRotate(node->parent->parent);
-				}
+				// List 타입
+
+				//        [pp(R)]
+				//      [p(B)]  [u(B)]
+				//   [n(R)]  
+
+				//       [p(B)]  
+				//   [n(R)]   [pp(R)]
+				//					[u(B)]
+				node->parent->color = Color::Black;
+				node->parent->parent->color = Color::Red;
+				RightRotate(node->parent->parent);
 			}
 		}
-		_root->color = Color::Black;
+		else
+		{
+			Node* uncle = node->parent->parent->left;
+			if (uncle->color == Color::Red)
+			{
+				node->parent->color = Color::Black; // p
+				uncle->color = Color::Black; // u
+				node->parent->parent->color = Color::Red; // pp
+				node = node->parent->parent;
+			}
+			else
+			{
+				if (node == node->parent->left) // Triangle 타입
+				{
+					node = node->parent;
+					RightRotate(node);
+				}
+
+				// List 타입
+
+				//					 [p(B)]    
+				//			  [pp(R)]      [n(R)]  
+				//      [u(B)] 
+				node->parent->color = Color::Black;
+				node->parent->parent->color = Color::Red;
+				LeftRotate(node->parent->parent);
+			}
+		}
+	}
+
+	_root->color = Color::Black;
 }
 
 void BinarySearchTree::Delete(int key)
@@ -273,28 +257,25 @@ void BinarySearchTree::Replace(Node* u, Node* v)
 
 	delete u;
 }
+//     [y]
+//  [x]   [3]
+// [1][2]
 
-//	 [y]
-// [x]	[3]
-//[1][2]
-
-//	 [x]
-//[1]	[y]
-//	   [2][3]
-// 
-//시계 방향으로  돌린다 left
+//    [x]  
+// [1]   [y]
+//      [2][3]
 
 void BinarySearchTree::LeftRotate(Node* x)
 {
 	Node* y = x->right;
 
-	x->right = y->left; //[2]	
+	x->right = y->left; // [2];
 
 	if (y->left != _nil)
 		y->left->parent = x;
 
 	y->parent = x->parent;
-	//부모가 왼쪽, 오른쪽에 있는지 따라 바꾸기
+
 	if (x->parent == _nil)
 		_root = y;
 	else if (x == x->parent->left)
@@ -306,25 +287,23 @@ void BinarySearchTree::LeftRotate(Node* x)
 	x->parent = y;
 }
 
+//     [y]
+//  [x]   [3]
+// [1][2]
 
-//	 [y]
-// [x]	[3]
-//[1][2]
+//    [x]  
+// [1]   [y]
+//      [2][3]
 
-//	 [x]
-//[1]	[y]
-//	   [2][3]
-// 
 void BinarySearchTree::RightRotate(Node* y)
 {
 	Node* x = y->left;
 
-	y->left = x->right; //[2]	
+	y->left = x->right; // [2];
 
 	if (x->right != _nil)
 		x->right->parent = y;
-	
-	//부모가 왼쪽, 오른쪽에 있는지 따라 바꾸기
+
 	x->parent = y->parent;
 
 	if (y->parent == _nil)
@@ -334,6 +313,6 @@ void BinarySearchTree::RightRotate(Node* y)
 	else
 		y->parent->right = x;
 
-	x->left = y;
+	x->right = y;
 	y->parent = x;
 }
