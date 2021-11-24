@@ -8,105 +8,124 @@ using namespace std;
 
 // 오늘의 주제 : 정렬
 
-//코딩면접 시험에 은근히 나온다고 한다
-
-// 1. 버블 정렬 (Bubble Sort)
-
-// 1대1로 비교후 큰건 뒤로 작은건 앞으로 뒤바뀐다
-// 한번 루프를 돌면 제일 큰 값이 맨 뒤에 있기 떄문에
-// 다음 루프를 돌때에는 그 값을 포함하지 않고 비교하며 또 정렬한다
-// 효율이 좋지 않다
-
-void BubbleSort(vector<int>& v)
+//힙 정렬
+//우선순위 큐가 조건 때문에 작은 순서대로 정렬된 값을 꺼내준다
+void HeapSort(vector<int>& v)
 {
-	const int n = (int)v.size();
+	priority_queue<int, vector<int>, greater<int>> pq;
 
-	//시간 복잡도 N-1 + N-2
-	//등차수열의 합 = N * (N-1) /2
-	//0(N^2) ㅈㄴ 느림
-	for (int i = 0; i < n - 1; i++)
+
+	//시간 복잡도
+	//0(N logN)
+	for (int num : v)
+		pq.push(num);
+
+	v.clear();
+
+	//0(N logN) 그래도 느리긴하다
+	while (pq.empty() == false)
 	{
-		for (int j = 0; j < (n - 1 - i); j++)
-		{
-			if (v[j] > v[j + 1])
-			{
-				int temp = v[j];
-				v[j] = v[j + 1];
-				v[j + 1] = temp;
-			}
-		}
+		v.push_back(pq.top());
+		pq.pop();
+
 	}
 }
 
 
-// 2. 선택 정렬 (Selection Sort)
-// 직관적이다
-// 한번에 사악 훝어보고 가장 작은 값을 맨 앞에 놓는다
-// 앞의 값이 정해졌으니 남은 값들을 같은 식으로 훝어보고
-// 다시 정렬한다
-void SelectionSort(vector<int> & v)
+//병합 정렬
+//분할 정복 (Divide and Conquer)
+//	분할 Divide 문제를 단순하게 분할
+//	정복 COnquer 분할된 문제를 해결
+//  결합 Combine 결과 취합후 마무리
+//
+
+// [3][k][7][2][j][4][8][9]		8개 * 1
+// [3][k][7][2]		[j][4][8][9] 4개 * 2 
+// [2][3] [7][k]		[4][8] [9][j] 2개 * 4 
+// 
+// [2][3][4][7][8][9][j][k]	 
+// 분할되는 만큼 또 나눠서 할 수 있다
+// 조립도 마찬가지다
+
+
+//0(N logN)
+void MergeResult(vector<int>& v, int left, int mid, int right)
 {
-	const int n = (int)v.size();
+	//[3][k][7][2]	[j][4][8][9]
 
-	//시간 복잡도 N-1 + N-2
-	//등차수열의 합 = N * (N-1) /2
-	//0(N^2) 버블보단 조금 더 성능이 낫다
+	int leftIdx = left;
+	int rightIdx = mid + 1;
 
-	for (int i = 0; i < n - 1; i++)
+
+	vector<int> temp;
+
+	while (leftIdx <= mid && rightIdx <= right)
 	{
-		//한번 돌면서 가장 좋았던 애가 몇번째 인덱스에 있는지 
-		int bestIdx = i;
-		
-		for (int j = i + 1; j < n; j++)
+		if (v[leftIdx] <= v[rightIdx])
 		{
-			if (v[j] < v[bestIdx])
-				bestIdx = j;
+			temp.push_back(v[leftIdx]);
+			leftIdx++;
 		}
-
-		//교환
-		int temp = v[i];
-		v[i] = v[bestIdx];
-		v[bestIdx] = temp;
+		else
+		{
+			temp.push_back(v[rightIdx]);
+			rightIdx++;
+		}
 	}
+
+	//왼쪽이 먼저 끝났으면, 오른쪽 나머지 데이터 복사
+	if (leftIdx > mid)
+	{
+		while (rightIdx <= right)
+		{
+			temp.push_back(v[rightIdx]);
+			rightIdx++;
+		}
+	}
+	//오른쪽이 먼저 끝났으면, 왼쪽 나머지 데이터 복사
+	else
+	{
+		while (leftIdx <= mid)
+		{
+			temp.push_back(v[leftIdx]);
+			leftIdx++;
+		}
+	}
+
+	for (int i = 0; i < temp.size(); i++)
+		v[left + i] = temp[i];
 }
 
-
-// 3. 삽입 정렬 (Insertion Sort)
-// 면접 시험에 자주 나옴
-// 값이 랜덤으로 정렬되어 있으면 맨 앞의 값을 
-// 또 하나의 통로에 하나씩 집어 넣는다 
-// 하나씩 물어보면서 복사를 하고 크기에 따라 재정렬된다
-
-
-void InsertSort(vector<int>& v)
+void MergeSort(vector<int>& v, int left, int right)
 {
-	const int n = (int)v.size();
+	if (left >= right)
+		return;
 
-	//0(N^2) 딱히 좋진 않다 그냥 위보다 약간 나은 정도?
-	for (int i = 1; i < n; i++)
-	{
-		int insertData = v[i];
+	int mid = (left + right) / 2;
+	MergeSort(v, left, mid); //앞의 4개
+	MergeSort(v, mid + 1, right); //뒤의 4개
 
-		int j;
-		for (j = i - 1; j >= 0; j--)
-		{
-			if (v[j] > insertData)
-				v[j + 1] = v[j];
-			else
-				break;
-		}
-
-		v[j + 1] = insertData;
-	}
+	MergeResult(v, left, mid, right);
 }
 
 int main()
 {
-	vector<int> v{ 1,5,3,4,2 };
-	std::sort(v.begin(), v.end());
+	vector<int> v;
+
+	srand(time(0));
+
+	for (int i = 0; i < 50; i++)
+	{
+		int randValue = rand() % 100;
+		v.push_back(randValue);
+	}
 
 	//BubbleSort(v);
 	//SelectionSort(v);
-	InsertSort(v);
+	//InsertSort(v);
+	//HeapSort(v);
+
+	MergeSort(v, 0, v.size() - 1);
+
 
 }
