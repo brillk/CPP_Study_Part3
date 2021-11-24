@@ -6,143 +6,172 @@
 #include <thread>
 using namespace std;
 
-// 오늘의 주제 : 정렬
+//그래프/ 트리 응용
+//오늘의 주제 : 최소 스패닝 트리 Minimum Spanning Tree
 
-// 오늘의 주제 : 해시 테이블
 
-// Q) map vs hash_map (C++11 표준 unordered_map)
+// 상호 배타적 집합 Disjoint Set
+// -> 유니온-파인드 Union-Find
 
-// map : Red-Black Tree
-// - 추가/탐색/삭제 O(logN)
+void NewGame() {
 
-// C# dictionary = C++ map (X)
-// C# dictionary = C++ unordered_map
-
-// hash_map (unordered_map)
-// - 추가/탐색/삭제 O(1)
-
-// 살은 내주고 뼈를 취한다!
-// 메모리를 내주고 속도를 취한다!
-
-// 아파트 우편함
-// [201][202][203][204][205]
-// [101][102][103][104][105]
-
-// 1~999 user(userId=1~999)
-// [1][2][3][][][][][999]
-
-// '해시' '테이블'
-// O(1)
-void TestTable()
-{
 	struct User
 	{
-		int userId = 0; // 1~999
-		string username;
+		int teamId;
+		//TODO
 	};
 
+	//TODO
 	vector<User> users;
-	users.resize(1000);
-
-	// 777번 유저 정보 세팅
-	users[777] = User{ 777, "Rookiss" };
-
-	// 777번 유저 이름은?
-	string name = users[777].username;
-	cout << name << endl;
-
-	// 테이블
-	// 키를 알면, 데이터를 단번에 찾을 수 있다!
-
-	// 문제의 상황
-	// int32_max (3억~)
-	// 살을 내주는 것도 정도껏 내줘야지...
-	// 메모리도 무한은 아니다!
-}
-
-// 보안
-// id: rookiss + pw: qwer1234
-// id: rookiss + pw: hash(qwer1234) -> sdaf123!@#asdfasdf1234
-
-// DB [rookiss][sdaf123!@#asdfasdf1234]
-// 비밀번호 찾기 -> 아이디 입력 / 폰 인증 -> 새 비밀번호를 입력하세요
-
-void TestHash()
-{
-	struct User
+	for (int i = 0; i < 1000; i++)
 	{
-		int userId = 0; // 1~int32_max
-		string username;
-	};
-
-	//       []
-	// [][][][][][][][]
-	vector<User> users;
-	users.resize(1000);
-
-	const int userId = 123456789;
-	int key = (userId % 1000); // hash < 고유번호
-
-	// 123456789번 유저 정보 세팅
-	users[key] = User{ userId, "Rookiss" };
-
-	// 123456789번 유저 이름은?
-	User& user = users[key];
-	if (user.userId == userId)
-	{
-		string name = user.username;
-		cout << name << endl;
+		users.push_back(User{ i });
 	}
 
-	// 충돌 문제
-	// 충돌이 발생한 자리를 대신해서 다른 빈자리를 찾아나서면 된다
-	// - 선형 조사법 (linear probing)
-	// hash(key)+1 -> hash(key)+2
-	// - 이차 조사법 (quadratic probing)
-	// hash(key)+1^2 -> hash(key)+2^2
-	// - etc
+	//팀 동맹
+	//user 1 <-> user 5
+	users[5].teamId = users[1].teamId;
 
-	// 체이닝
-	// 
+	//teamId = 1인 팀과 teamId = 2인 팀이 통합
 
-}
-
-// O(1)
-void TestHashTableChaining()
-{
-	struct User
+	for (User& user : users)
 	{
-		int userId = 0; // 1~int32_max
-		string username;
-	};
-
-	// [ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ]
-	vector<vector<User>> users;
-	users.resize(1000);
-
-	const int userId = 123456789;
-	int key = (userId % 1000); // hash < 고유번호
-
-	// 123456789번 유저 정보 세팅
-	users[key].push_back(User{ userId, "Rookiss" });
-	users[789].push_back(User{ 789, "FaKer" });
-
-	// 123456789번 유저 이름은?
-	vector<User>& bucket = users[key];
-	for (User& user : bucket)
-	{
-		if (user.userId == userId)
-		{
-			string name = user.username;
-			cout << name << endl;
-		}
+		if (user.teamId == 1)
+			user.teamId = 2;
 	}
+
+	//찾기 연산 0(1)
+	//합치기 연산 0(N) 
+
+
 }
 
 
+//트리 구조를 이용한 상호 배타적 집합의 표현 
+//[0][1][2][3]
+
+struct Node
+{
+	Node* leader;
+};
+
+//1과 3이 대장
+//[1]	[3]
+//[2]	[4][5]
+//		[0]
+
+
+//시간 복잡도 0 (Ackermann(n)) = 0(1)
+class NaiveDisjointSet
+{
+
+public:
+	NaiveDisjointSet(int n) : _parent(n)
+	{
+		for (int i = 0; i < n; i++)
+			_parent[i] = i;
+	}
+
+	//마 니 대장이 뉘고?
+	int Find(int u)
+	{
+		if (u == _parent[u])
+			return u;
+
+		return Find(_parent[u]);
+	}
+
+	//u와 v를 합친다 (일단 u가 v밑으로)
+	void Merge(int u, int v)
+	{
+		u = Find(u);
+		v = Find(v);
+
+		if (u == v)
+			return;
+
+		//rank[u] <= rank[v] 보장됨
+		_parent[u] = v;
+	
+	}
+
+private:
+	vector<int> _parent;
+	
+};
+
+
+
+//트리가 한쪽으로 기우는 문제를 해결
+//트리를 합칠때, 항상 [높이가 낮은 트리를] [높이가 높은 트리] 밑으로 넣어주자
+//Union-By-Rand 랭크에 의한 합치기 최적화
+
+
+// 시간 복잡도 O(Ackermann(n)) = O(1)
+class DisjointSet
+{
+public:
+	DisjointSet(int n) : _parent(n), _rank(n, 1)
+	{
+		for (int i = 0; i < n; i++)
+			_parent[i] = i;
+	}
+
+	// 조직 폭력배 구조?
+	// [1]		[3]
+	// [2]	 [4][5][0]
+	// 		    
+
+	// 니 대장이 누구니?
+	int Find(int u)
+	{
+		if (u == _parent[u])
+			return u;
+
+		//_parent[u] = Find(_parent[u]);
+		//return _parent[u];
+
+		return _parent[u] = Find(_parent[u]);
+	}
+
+	// u와 v를 합친다
+	void Merge(int u, int v)
+	{
+		u = Find(u);
+		v = Find(v);
+
+		if (u == v)
+			return;
+
+		if (_rank[u] > _rank[v])
+			swap(u, v);
+
+		// rank[u] <= rank[v] 보장됨
+		_parent[u] = v;
+
+		if (_rank[u] == _rank[v])
+			_rank[v]++;
+	}
+
+private:
+	vector<int> _parent;
+	vector<int> _rank;
+};
 
 int main()
 {
-	//TestTable();
-	TestHash();
+	DisjointSet teams(1000);
+
+	teams.Merge(10, 1);
+	int teamId = teams.Find(1);
+	int teamId2 = teams.Find(10);
+
+	teams.Merge(3, 2);
+	int teamId3 = teams.Find(3);
+	int teamId4 = teams.Find(2);
+
+	teams.Merge(1, 3);
+	int teamId5 = teams.Find(1);
+	int teamId6 = teams.Find(3);
+
 }
