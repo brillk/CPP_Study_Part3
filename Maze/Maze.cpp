@@ -1,5 +1,4 @@
-﻿
-#include <iostream>
+﻿#include <iostream>
 #include "pch.h"
 #include "ConsoleHelper.h"
 #include "Board.h"
