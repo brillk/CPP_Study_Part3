@@ -106,7 +106,7 @@ void Board::GenerateMap_Kruskal()
 	{
 		int u = edge.u.y * _size + edge.u.x;
 		int v = edge.v.y * _size + edge.v.x;
-		//같은 그룹이면 스킵 (사이클 발생)
+		//같은 그룹이면 스킵 (사이클 발생 방지)
 		if (sets.Find(u) == sets.Find(v))
 			continue;
 
